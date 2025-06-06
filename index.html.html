@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>NeuraBase - Smart Prompt Generator for All Your AI Tools</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --text-primary: #ffffff;
+    --text-secondary: #e0e6ed;
+    --text-muted: #9ca3af;
+    --background-dark: #0a0a0a;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.2), transparent 100%),
+      radial-gradient(circle at 80% 70%, rgba(245, 87, 108, 0.25), transparent 100%),
+      linear-gradient(135deg, #0a0a0a, #1a1b2f);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.6;
+    position: relative;
+    scroll-behavior: smooth;
+    min-height: 100vh;
+  }
+
+  /* Background lines and shapes */
+  .background {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -4;
+    background: #0a0a0a;
+  }
+  .grid-line {
+    position: fixed;
+    background: rgba(102, 126, 234, 0.15);
+    pointer-events: none;
+    animation-timing-function: linear;
+  }
+  .v-line-1, .v-line-2, .v-line-3 {
+    top: 0; bottom: 0;
+    width: 1px;
+  }
+  .v-line-1 {
+    left: 10%;
+    animation: moveV 15s infinite alternate;
+  }
+  .v-line-2 {
+    left: 50%;
+    animation: moveV 20s infinite alternate-reverse;
+  }
+  .v-line-3 {
+    left: 90%;
+    animation: moveV 18s infinite alternate;
+  }
+  .h-line-1, .h-line-2, .h-line-3 {
+    left: 0; right: 0;
+    height: 1px;
+  }
+  .h-line-1 {
+    top: 20%;
+    animation: moveH 14s infinite alternate-reverse;
+  }
+  .h-line-2 {
+    top: 65%;
+    animation: moveH 22s infinite alternate;
+  }
+  .h-line-3 {
+    top: 85%;
+    animation: moveH 19s infinite alternate-reverse;
+  }
+
+  @keyframes moveV {
+    0% {transform: translateX(0);}
+    100% {transform: translateX(20px);}
+  }
+  @keyframes moveH {
+    0% {transform: translateY(0);}
+    100% {transform: translateY(-12px);}
+  }
+  .floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.15;
+    mix-blend-mode: screen;
+    animation: float 25s ease-in-out infinite;
+  }
+  .shape-1 {width: 250px; height: 250px; background: #3a5afe; top: 15%; left: 15%; animation-delay: 0s;}
+  .shape-2 {width: 180px; height: 180px; background: #ff59a4; top: 60%; left: 75%; animation-delay: 8s;}
+  .shape-3 {width: 260px; height: 260px; background: #823acc; top: 85%; left: 28%; animation-delay: 13s;}
+  .shape-4 {width: 140px; height: 140px; background: #ff4444; top: 35%; left: 70%; animation-delay: 4s;}
+  @keyframes float {
+    0%, 100% {transform: translateY(0) translateX(0) scale(1);}
+    50% {transform: translateY(-40px) translateX(20px) scale(1.1);}
+  }
+
+  /* Navigation and Mobile Menu */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(10,10,10,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: 1100;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+    cursor: default;
+    user-select: none;
+  }
+  ul.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: nowrap;
+  }
+  ul.nav-links li a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  ul.nav-links li a:hover,
+  ul.nav-links li a.active {
+    color: var(--text-primary);
+    transform: translateY(-1.5px);
+  }
+  ul.nav-links li a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    transition: width 0.3s ease;
+  }
+  ul.nav-links li a:hover::after,
+  ul.nav-links li a.active::after {
+    width: 100%;
+  }
+
+  .menu-toggle {
+    display: none;
+    position: relative;
+    width: 28px;
+    height: 22px;
+    cursor: pointer;
+    z-index: 1200;
+    user-select: none;
+  }
+  .menu-toggle span,
+  .menu-toggle span::before,
+  .menu-toggle span::after {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: var(--text-primary);
+    border-radius: 3px;
+    opacity: 1;
+    transition: all 0.3s ease;
+  }
+  .menu-toggle span {
+    top: 50%;
+    margin-top: -1.5px;
+  }
+  .menu-toggle span::before {
+    content: "";
+    top: -8px;
+  }
+  .menu-toggle span::after {
+    content: "";
+    top: 8px;
+  }
+  /* Active hamburger animation */
+  .menu-toggle.active span {
+    background: transparent;
+  }
+  .menu-toggle.active span::before {
+    transform: rotate(45deg);
+    top: 0;
+  }
+  .menu-toggle.active span::after {
+    transform: rotate(-45deg);
+    top: 0;
+  }
+
+  /* Mobile nav styles */
+  @media (max-width: 768px) {
+    ul.nav-links {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 220px;
+      background: rgba(10,10,10,0.98);
+      backdrop-filter: blur(25px);
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 5rem 1rem 2rem;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      box-shadow: -4px 0 20px rgba(102, 126, 234, 0.4);
+      z-index: 1150;
+      overflow-y: auto;
+    }
+    ul.nav-links.open {
+      transform: translateX(0);
+    }
+    ul.nav-links li {
+      margin: 0;
+    }
+    ul.nav-links li a {
+      font-size: 1.3rem;
+      display: block;
+      padding: 0.6rem 1rem;
+    }
+    .menu-toggle {
+      display: block;
+    }
+  }
+
+  /* Language toggle container and buttons */
+  .language-toggle-container {
+    position: fixed;
+    top: 60px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+    z-index: 1100;
+  }
+  .language-toggle-btn {
+    padding: 0.5rem 0.8rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    user-select: none;
+    outline-offset: 2px;
+  }
+  .language-toggle-btn:hover,
+  .language-toggle-btn.active {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Hero Section - adjusted padding top */
+  .hero {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 1rem 5rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 8px rgba(102,126,234,0.7);
+  }
+  .hero-content {
+    max-width: 90vw;
+  }
+  .hero-content h1 {
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: 800;
+    margin-top: 40px; /* lowered down from top */
+    margin-bottom: 1rem;
+    background: var(--primary-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1.5px;
+    line-height: 1.15;
+  }
+  .hero-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .hero-description {
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+    color: var(--accent-gradient);
+    max-width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cta-button {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+  }
+  .cta-button.secondary {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+  .cta-button.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Generator Section */
+  .generator {
+    padding: 4rem 1.5rem 6rem;
+    max-width: 95vw;
+    margin: 0 auto 6rem;
+    z-index: 1;
+    position: relative;
+  }
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    background: var(--primary-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+    user-select: none;
+    text-shadow: 0 0 8px rgba(102,126,234,0.5);
+  }
+  .generator-form {
+    padding: 2rem 1.5rem;
+    background: var(--glass-bg);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 15px 60px rgba(58,90,254,0.4);
+    backdrop-filter: blur(25px);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+    color: var(--text-primary);
+    user-select: none;
+  }
+  select, textarea, input {
+    width: 100%;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: all 0.3s ease;
+    resize: none;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
+  }
+  select:focus, textarea:focus, input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 1);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+  }
+  textarea {
+    min-height: 100px;
+  }
+  /* Usage info */
+  .usage-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    user-select: none;
+    text-align: right;
+  }
+  .generate-btn {
+    width: 100%;
+    background: var(--primary-gradient);
+    border-radius: 15px;
+    padding: 1.3rem 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 12px 50px rgba(102, 126, 234, 0.5);
+    transition: all 0.3s ease;
+    user-select: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .generate-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 70px rgba(102, 126, 234, 0.8);
+  }
+  .generate-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .result-section {
+    margin-top: 2.5rem;
+    display: none;
+    user-select: text;
+  }
+  .result-box {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    font-size: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.3);
+    max-height: 280px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100px;
+    position: relative;
+  }
+  .result-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .action-btn {
+    padding: 0.6rem 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    user-select: none;
+    white-space: nowrap;
+    position: relative;
+  }
+  .action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Typing animation cursor */
+  .typing-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1.2em;
+    background-color: var(--text-primary);
+    margin-left: 2px;
+    animation: blink 1s steps(2, start) infinite;
+    vertical-align: bottom;
+  }
+  @keyframes blink {
+    0%, 100% {opacity: 1;}
+    50% {opacity: 0;}
+  }
+
+  /* Platform illustration container */
+  .platform-illustration {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+    gap: 20px;
+  }
+  .platform-icon {
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.7));
+    transition: opacity 0.3s ease;
+  }
+
+  /* Categories Section */
+  .categories {
+    padding: 5rem 1.5rem 7rem;
+    max-width: 95vw;
+    margin: 0 auto 7rem;
+    user-select: none;
+  }
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .category-card {
+    background: var(--glass-bg);
+    padding: 1.8rem 1.4rem;
+    border-radius: 20px;
+    transition: all 0.4s ease;
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(15px);
+  }
+  .category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+  .category-card:hover::before {
+    left: 100%;
+  }
+  .category-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+  .category-icon {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+    filter: grayscale(0.7);
+    transition: filter 0.3s ease;
+    user-select: none;
+  }
+  .category-card:hover .category-icon {
+    filter: grayscale(0);
+  }
+  .category-card h3 {
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    user-select: none;
+  }
+  .category-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    user-select: none;
+  }
+
+  /* About Section */
+  .about {
+    padding: 5rem 1.5rem 7rem;
+    max-width: 95vw;
+    margin: 0 auto 7rem;
+    text-align: center;
+    user-select: none;
+  }
+  .about-content p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .feature-item {
+    padding: 1.6rem;
+    background: var(--glass-bg);
+    border-radius: 18px;
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+  .feature-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary-gradient);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    user-select: none;
+  }
+  .feature-item h4 {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    color: var(--text-primary);
+    user-select: none;
+  }
+  .feature-item p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    user-select: none;
+  }
+
+  /* Reviews Section */
+  #reviews {
+    padding: 5rem 1.5rem 7rem;
+    max-width: 95vw;
+    margin: 0 auto 7rem;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+  }
+  .review-slider {
+    display: flex;
+    width: max-content;
+    animation: slideReviews 30s linear infinite;
+    gap: 1.5rem;
+  }
+  .review-card {
+    flex: 0 0 280px;
+    background: var(--glass-bg);
+    border-radius: 25px;
+    border: 1px solid var(--glass-border);
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgb(102 126 234 / 0.25);
+    backdrop-filter: blur(15px);
+    color: var(--text-secondary);
+    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .review-card p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+  .review-author {
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: right;
+  }
+  @keyframes slideReviews {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Footer */
+  footer {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    user-select: none;
+  }
+
+</style>
+</head>
+<body>
+  <div class="background"></div>
+  <div class="grid-line v-line-1"></div>
+  <div class="grid-line v-line-2"></div>
+  <div class="grid-line v-line-3"></div>
+  <div class="grid-line h-line-1"></div>
+  <div class="grid-line h-line-2"></div>
+  <div class="grid-line h-line-3"></div>
+
+  <div class="floating-shape shape-1"></div>
+  <div class="floating-shape shape-2"></div>
+  <div class="floating-shape shape-3"></div>
+  <div class="floating-shape shape-4"></div>
+
+  <nav>
+    <div class="logo" title="NeuraBase">NeuraBase</div>
+    <div class="menu-toggle" id="menuToggle" aria-label="Toggle navigation menu" role="button" tabindex="0">
+      <span></span>
+    </div>
+    <ul class="nav-links" id="navLinks" role="list">
+      <li><a href="#hero" class="active" data-i18n="nav_home">Home</a></li>
+      <li><a href="#generator" data-i18n="nav_generator">Generator</a></li>
+      <li><a href="#categories" data-i18n="nav_categories">Categories</a></li>
+      <li><a href="#reviews" data-i18n="nav_reviews">Reviews</a></li>
+      <li><a href="#about" data-i18n="nav_about">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="language-toggle-container" role="group" aria-label="Language selection">
+    <button id="enBtn" class="language-toggle-btn active" aria-pressed="true" type="button">EN</button>
+    <button id="idBtn" class="language-toggle-btn" aria-pressed="false" type="button">ID</button>
+  </div>
+
+  <section id="hero" class="hero" role="banner" aria-label="Main banner">
+    <div class="hero-content">
+      <h1 data-i18n="hero_title">AI Prompts for Everything</h1>
+      <div class="hero-subtitle" data-i18n="hero_subtitle">Your advanced smart prompt generator for all your AI tools</div>
+      <div class="hero-description" data-i18n="hero_description">Generate high-quality and effective prompts for GPT Chat, Midjourney, and other AI platforms with one click. Save time and maximize your results!</div>
+      <div class="cta-buttons">
+        <a href="#generator" class="cta-button" data-i18n="cta_generator">Generator Now</a>
+        <a href="#categories" class="cta-button secondary" data-i18n="cta_browse_categories">Browse Categories</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="generator" class="generator" aria-labelledby="generator-title">
+    <h2 id="generator-title" class="section-title" data-i18n="generator_title">Prompt Generator</h2>
+    <form class="generator-form" id="promptForm" aria-live="polite" aria-describedby="generator-desc" autocomplete="off" novalidate>
+      <div class="platform-illustration" aria-hidden="true">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg" alt="GPT Chat Logo" id="icon-chatgpt" class="platform-icon" style="display:none" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Midjourney_Logo.svg/1200px-Midjourney_Logo.svg.png" alt="Midjourney Logo" id="icon-midjourney" class="platform-icon" style="display:none" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/OpenAI_Logo.svg" alt="DALL-E Logo" id="icon-dalle" class="platform-icon" style="display:none" />
+        <img src="https://raw.githubusercontent.com/Stability-AI/stability-sdk/main/docs/logo/stability-sdk.svg" alt="Stable Diffusion Logo" id="icon-stable-diffusion" class="platform-icon" style="display:none" />
+        <svg id="icon-other" class="platform-icon" style="fill: var(--text-primary); display:none;" width="48" height="48" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="none" fill="var(--text-primary)"/></svg>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="platform" data-i18n="label_platform">Platform</label>
+          <select id="platform" name="platform" required>
+            <option value="" data-i18n="select_platform">Select Platform</option>
+            <option value="chatgpt">GPT Chat</option>
+            <option value="midjourney">Midjourney</option>
+            <option value="dalle">DALL·E</option>
+            <option value="stable-diffusion">Stable Diffusion</option>
+            <option value="other">Other AI Tool</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label for="description" data-i18n="label_description">Description</label>
+          <textarea id="description" name="description" placeholder="Describe what you want..." required></textarea>
+        </div>
+      </div>
+      <div class="usage-info" aria-live="polite" aria-atomic="true" id="usageInfo">Prompts used: 0 / 10</div>
+      <button type="submit" id="generateBtn" class="generate-btn" aria-live="assertive"><span data-i18n="btn_generate_prompt">Generate Prompt</span></button>
+      <p id="generator-desc" class="sr-only" data-i18n="generator_instruction">Select your platform and describe what prompt you want, then click generate.</p>
+    </form>
+    <div class="result-section" id="resultSection" aria-live="polite" aria-atomic="true" role="region" aria-label="Generated prompt result">
+      <div class="result-box" id="resultBox" tabindex="0" aria-label="Generated prompt output"></div>
+      <div class="result-actions">
+        <button class="action-btn" id="copyBtn" aria-label="Copy generated prompt to clipboard">📋 <span data-i18n="btn_copy">Copy</span></button>
+        <button class="action-btn" id="clearBtn" aria-label="Clear generated prompt and input fields">🗑 <span data-i18n="btn_clear">Clear</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="categories" class="categories" aria-label="Prompt categories">
+    <h2 class="section-title" data-i18n="categories_title">Prompt Categories</h2>
+    <div class="categories-grid">
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Business prompts category">
+        <div class="category-icon" aria-hidden="true">💼</div>
+        <h3 data-i18n="category_business">Business</h3>
+        <p data-i18n="category_business_desc">Prompts designed to accelerate your business ideas, marketing strategies, and professional projects.</p>
+      </article>
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Art & Design prompts category">
+        <div class="category-icon" aria-hidden="true">🎨</div>
+        <h3 data-i18n="category_art_design">Art & Design</h3>
+        <p data-i18n="category_art_design_desc">Creative prompts for artists, designers, and creators to inspire digital art and visuals.</p>
+      </article>
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Education prompts category">
+        <div class="category-icon" aria-hidden="true">📚</div>
+        <h3 data-i18n="category_education">Education</h3>
+        <p data-i18n="category_education_desc">Educational prompts for teaching, learning, and developing educational content efficiently.</p>
+      </article>
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Writing prompts category">
+        <div class="category-icon" aria-hidden="true">✍️</div>
+        <h3 data-i18n="category_writing">Writing</h3>
+        <p data-i18n="category_writing_desc">Prompts to generate creative writing, copywriting, storytelling, or scripts to boost your content.</p>
+      </article>
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Technology prompts category">
+        <div class="category-icon" aria-hidden="true">💻</div>
+        <h3 data-i18n="category_technology">Technology</h3>
+        <p data-i18n="category_technology_desc">Technical prompts for coding, software development, AI experiments, and futuristic concepts.</p>
+      </article>
+      <article class="category-card" tabindex="0" role="button" aria-pressed="false" aria-label="Lifestyle prompts category">
+        <div class="category-icon" aria-hidden="true">🌿</div>
+        <h3 data-i18n="category_lifestyle">Lifestyle</h3>
+        <p data-i18n="category_lifestyle_desc">Prompts that focus on wellness, hobbies, fitness, food, and enriching your everyday life.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="reviews" aria-label="User reviews and testimonials">
+    <h2 class="section-title" data-i18n="reviews_title">User Reviews</h2>
+    <div class="review-slider" id="reviewSlider" aria-live="polite" aria-atomic="true">
+      <div class="review-card">
+        <p data-i18n="review_1_text">NeuraBase helped me generate prompts quickly and easily. It’s a true time saver!</p>
+        <div class="review-author" data-i18n="review_1_author">- Alice</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_2_text">I love how I get tailored prompts for each AI platform. The results are amazing!</p>
+        <div class="review-author" data-i18n="review_2_author">- Bob</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_3_text">A fantastic tool for my art projects. The descriptions are vibrant and inspiring.</p>
+        <div class="review-author" data-i18n="review_3_author">- Clara</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_4_text">I used NeuraBase for business copywriting prompts. Effective and reliable!</p>
+        <div class="review-author" data-i18n="review_4_author">- David</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_5_text">Helpful interface and amazing prompt quality. I highly recommend it.</p>
+        <div class="review-author" data-i18n="review_5_author">- Eva</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_6_text">Great for creative writing ideas, just what I needed to beat the writer’s block.</p>
+        <div class="review-author" data-i18n="review_6_author">- Frank</div>
+      </div>
+      <!-- Duplicate reviews for endless scroll -->
+      <div class="review-card">
+        <p data-i18n="review_1_text">NeuraBase helped me generate prompts quickly and easily. It’s a true time saver!</p>
+        <div class="review-author" data-i18n="review_1_author">- Alice</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_2_text">I love how I get tailored prompts for each AI platform. The results are amazing!</p>
+        <div class="review-author" data-i18n="review_2_author">- Bob</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_3_text">A fantastic tool for my art projects. The descriptions are vibrant and inspiring.</p>
+        <div class="review-author" data-i18n="review_3_author">- Clara</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_4_text">I used NeuraBase for business copywriting prompts. Effective and reliable!</p>
+        <div class="review-author" data-i18n="review_4_author">- David</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_5_text">Helpful interface and amazing prompt quality. I highly recommend it.</p>
+        <div class="review-author" data-i18n="review_5_author">- Eva</div>
+      </div>
+      <div class="review-card">
+        <p data-i18n="review_6_text">Great for creative writing ideas, just what I needed to beat the writer’s block.</p>
+        <div class="review-author" data-i18n="review_6_author">- Frank</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="about" aria-label="About NeuraBase">
+    <h2 class="section-title" data-i18n="about_title">About NeuraBase</h2>
+    <div class="about-content">
+      <p data-i18n="about_description">
+        NeuraBase is your ultimate smart prompt generator that helps you create high-quality, effective prompts for a variety of AI tools and platforms.
+        Whether it’s GPT Chat, Midjourney, or other AI technologies, our advanced algorithms and curated styles enable you to get stunning results in seconds.
+      </p>
+      <div class="features-grid" role="list">
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon" aria-hidden="true">⚡</div>
+          <h4 data-i18n="feature_fast">Fast & Efficient</h4>
+          <p data-i18n="feature_fast_desc">Generate prompts with speed and accuracy to save your valuable time.</p>
+        </div>
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon" aria-hidden="true">🎯</div>
+          <h4 data-i18n="feature_targeted">Targeted Styles</h4>
+          <p data-i18n="feature_targeted_desc">Choose from various artistic and functional styles tailored for your needs.</p>
+        </div>
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon" aria-hidden="true">🔗</div>
+          <h4 data-i18n="feature_compatibility">Universal Compatibility</h4>
+          <p data-i18n="feature_compatibility_desc">Works flawlessly across all your favorite AI platforms and tools.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2024 NeuraBase - Advanced Smart Prompt Generator. All rights reserved.
+  </footer>
+
+<script>
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+
+  menuToggle.addEventListener('click', () => {
+    const expanded = menuToggle.classList.toggle('active');
+    if (expanded) {
+      navLinks.classList.add('open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+    } else {
+      navLinks.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+  menuToggle.addEventListener('keypress', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      menuToggle.click();
+    }
+  });
+
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        navLinks.classList.remove('open');
+        menuToggle.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+
+  document.querySelectorAll('nav ul.nav-links a').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelectorAll('nav ul.nav-links a').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  const translations = {
+    en: {
+      nav_home: "Home",
+      nav_generator: "Generator",
+      nav_categories: "Categories",
+      nav_reviews: "Reviews",
+      nav_about: "About",
+      hero_title: "AI Prompts for Everything",
+      hero_subtitle: "Your advanced smart prompt generator for all your AI tools",
+      hero_description: "Generate high-quality and effective prompts for GPT Chat, Midjourney, and other AI platforms with one click. Save time and maximize your results!",
+      cta_generator: "Generator Now",
+      cta_browse_categories: "Browse Categories",
+      generator_title: "Prompt Generator",
+      label_platform: "Platform",
+      select_platform: "Select Platform",
+      label_description: "Description",
+      btn_generate_prompt: "Generate Prompt",
+      generator_instruction: "Select your platform and describe what prompt you want, then click generate.",
+      btn_copy: "Copy",
+      btn_clear: "Clear",
+      categories_title: "Prompt Categories",
+      category_business: "Business",
+      category_business_desc: "Prompts designed to accelerate your business ideas, marketing strategies, and professional projects.",
+      category_art_design: "Art & Design",
+      category_art_design_desc: "Creative prompts for artists, designers, and creators to inspire digital art and visuals.",
+      category_education: "Education",
+      category_education_desc: "Educational prompts for teaching, learning, and developing educational content efficiently.",
+      category_writing: "Writing",
+      category_writing_desc: "Prompts to generate creative writing, copywriting, storytelling, or scripts to boost your content.",
+      category_technology: "Technology",
+      category_technology_desc: "Technical prompts for coding, software development, AI experiments, and futuristic concepts.",
+      category_lifestyle: "Lifestyle",
+      category_lifestyle_desc: "Prompts that focus on wellness, hobbies, fitness, food, and enriching your everyday life.",
+      reviews_title: "User Reviews",
+      review_1_text: "NeuraBase helped me generate prompts quickly and easily. It’s a true time saver!",
+      review_1_author: "- Alice",
+      review_2_text: "I love how I get tailored prompts for each AI platform. The results are amazing!",
+      review_2_author: "- Bob",
+      review_3_text: "A fantastic tool for my art projects. The descriptions are vibrant and inspiring.",
+      review_3_author: "- Clara",
+      review_4_text: "I used NeuraBase for business copywriting prompts. Effective and reliable!",
+      review_4_author: "- David",
+      review_5_text: "Helpful interface and amazing prompt quality. I highly recommend it.",
+      review_5_author: "- Eva",
+      review_6_text: "Great for creative writing ideas, just what I needed to beat the writer’s block.",
+      review_6_author: "- Frank",
+      about_title: "About NeuraBase",
+      about_description: "NeuraBase is your ultimate smart prompt generator that helps you create high-quality, effective prompts for a variety of AI tools and platforms. Whether it’s GPT Chat, Midjourney, or other AI technologies, our advanced algorithms and curated styles enable you to get stunning results in seconds.",
+      feature_fast: "Fast & Efficient",
+      feature_fast_desc: "Generate prompts with speed and accuracy to save your valuable time.",
+      feature_targeted: "Targeted Styles",
+      feature_targeted_desc: "Choose from various artistic and functional styles tailored for your needs.",
+      feature_compatibility: "Universal Compatibility",
+      feature_compatibility_desc: "Works flawlessly across all your favorite AI platforms and tools.",
+    },
+    id: {
+      nav_home: "Beranda",
+      nav_generator: "Generator",
+      nav_categories: "Kategori",
+      nav_reviews: "Ulasan",
+      nav_about: "Tentang",
+      hero_title: "Prompt AI untuk Segala Hal",
+      hero_subtitle: "Generator prompt pintar lanjutan untuk semua alat AI Anda",
+      hero_description: "Hasilkan prompt berkualitas tinggi dan efektif untuk GPT Chat, Midjourney, dan platform AI lainnya dengan satu klik. Hemat waktu dan maksimalkan hasil Anda!",
+      cta_generator: "Generator Sekarang",
+      cta_browse_categories: "Telusuri Kategori",
+      generator_title: "Generator Prompt",
+      label_platform: "Platform",
+      select_platform: "Pilih Platform",
+      label_description: "Deskripsi",
+      btn_generate_prompt: "Hasilkan Prompt",
+      generator_instruction: "Pilih platform Anda dan jelaskan prompt yang Anda inginkan, lalu klik hasilkan.",
+      btn_copy: "Salin",
+      btn_clear: "Bersihkan",
+      categories_title: "Kategori Prompt",
+      category_business: "Bisnis",
+      category_business_desc: "Prompt dirancang untuk mempercepat ide bisnis, strategi pemasaran, dan proyek profesional Anda.",
+      category_art_design: "Seni & Desain",
+      category_art_design_desc: "Prompt kreatif untuk seniman, desainer, dan kreator untuk menginspirasi seni digital dan visual.",
+      category_education: "Pendidikan",
+      category_education_desc: "Prompt edukatif untuk mengajar, belajar, dan mengembangkan konten pendidikan secara efisien.",
+      category_writing: "Penulisan",
+      category_writing_desc: "Prompt untuk menghasilkan penulisan kreatif, copywriting, storytelling, atau skrip untuk meningkatkan konten Anda.",
+      category_technology: "Teknologi",
+      category_technology_desc: "Prompt teknis untuk pengkodean, pengembangan perangkat lunak, eksperimen AI, dan konsep futuristik.",
+      category_lifestyle: "Gaya Hidup",
+      category_lifestyle_desc: "Prompt yang fokus pada kebugaran, hobi, makanan, dan memperkaya kehidupan sehari-hari Anda.",
+      reviews_title: "Ulasan Pengguna",
+      review_1_text: "NeuraBase membantu saya menghasilkan prompt dengan cepat dan mudah. Sangat menghemat waktu!",
+      review_1_author: "- Alice",
+      review_2_text: "Saya suka bagaimana saya mendapatkan prompt yang disesuaikan untuk setiap platform AI. Hasilnya luar biasa!",
+      review_2_author: "- Bob",
+      review_3_text: "Alat yang fantastis untuk proyek seni saya. Deskripsi sangat hidup dan menginspirasi.",
+      review_3_author: "- Clara",
+      review_4_text: "Saya menggunakan NeuraBase untuk prompt copywriting bisnis. Efektif dan dapat diandalkan!",
+      review_4_author: "- David",
+      review_5_text: "Antarmuka yang membantu dan kualitas prompt yang luar biasa. Saya sangat merekomendasikannya.",
+      review_5_author: "- Eva",
+      review_6_text: "Bagus untuk ide penulisan kreatif, tepat yang saya butuhkan untuk mengalahkan blok penulis.",
+      review_6_author: "- Frank",
+      about_title: "Tentang NeuraBase",
+      about_description: "NeuraBase adalah generator prompt pintar utama Anda yang membantu Anda membuat prompt berkualitas tinggi dan efektif untuk berbagai alat dan platform AI. Baik itu GPT Chat, Midjourney, atau teknologi AI lainnya, algoritma canggih dan gaya kurasi kami memungkinkan Anda mendapatkan hasil menakjubkan dalam hitungan detik.",
+      feature_fast: "Cepat & Efisien",
+      feature_fast_desc: "Hasilkan prompt dengan kecepatan dan akurasi untuk menghemat waktu berharga Anda.",
+      feature_targeted: "Gaya Terarah",
+      feature_targeted_desc: "Pilih dari berbagai gaya artistik dan fungsional yang sesuai dengan kebutuhan Anda.",
+      feature_compatibility: "Kompatibilitas Universal",
+      feature_compatibility_desc: "Bekerja sempurna di semua platform dan alat AI favorit Anda.",
+    }
+  };
+
+  function updateTranslations(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(elem => {
+      const key = elem.getAttribute('data-i18n');
+      if (translations[lang] && translations[lang][key]) {
+        elem.textContent = translations[lang][key];
+      }
+    });
+  }
+
+  const enBtn = document.getElementById('enBtn');
+  const idBtn = document.getElementById('idBtn');
+
+  let currentLanguage = 'en';
+
+  enBtn.addEventListener('click', () => {
+    if (!enBtn.classList.contains('active')) {
+      currentLanguage = 'en';
+      enBtn.classList.add('active');
+      enBtn.setAttribute('aria-pressed', 'true');
+      idBtn.classList.remove('active');
+      idBtn.setAttribute('aria-pressed', 'false');
+      updateTranslations('en');
+      // Save language selection in localStorage
+      localStorage.setItem('nb-language', 'en');
+    }
+  });
+
+  idBtn.addEventListener('click', () => {
+    if (!idBtn.classList.contains('active')) {
+      currentLanguage = 'id';
+      idBtn.classList.add('active');
+      idBtn.setAttribute('aria-pressed', 'true');
+      enBtn.classList.remove('active');
+      enBtn.setAttribute('aria-pressed', 'false');
+      updateTranslations('id');
+      localStorage.setItem('nb-language', 'id');
+    }
+  });
+
+  // Restore saved language setting or default to English
+  const savedLanguage = localStorage.getItem('nb-language');
+  if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'id')) {
+    currentLanguage = savedLanguage;
+    updateTranslations(currentLanguage);
+    if (currentLanguage === 'en') {
+      enBtn.classList.add('active');
+      enBtn.setAttribute('aria-pressed', 'true');
+      idBtn.classList.remove('active');
+      idBtn.setAttribute('aria-pressed', 'false');
+    } else {
+      idBtn.classList.add('active');
+      idBtn.setAttribute('aria-pressed', 'true');
+      enBtn.classList.remove('active');
+      enBtn.setAttribute('aria-pressed', 'false');
+    }
+  } else {
+    updateTranslations(currentLanguage);
+  }
+
+  const platformSelect = document.getElementById('platform');
+  const descriptionInput = document.getElementById('description');
+  const platformIcons = {
+    chatgpt: document.getElementById('icon-chatgpt'),
+    midjourney: document.getElementById('icon-midjourney'),
+    dalle: document.getElementById('icon-dalle'),
+    'stable-diffusion': document.getElementById('icon-stable-diffusion'),
+    other: document.getElementById('icon-other'),
+  };
+
+  // Function to show/hide platform icons based on selected platform
+  function showPlatformIcon(selected) {
+    Object.values(platformIcons).forEach(icon => icon.style.display = 'none');
+    if (platformIcons[selected]) {
+      platformIcons[selected].style.display = 'block';
+    }
+  }
+
+  platformSelect.addEventListener('change', () => {
+    showPlatformIcon(platformSelect.value);
+    localStorage.setItem('nb-platform', platformSelect.value);
+  });
+
+  function generatePrompt(platform, description, lang) {
+    const clarity = lang === 'id'
+      ? `Tugas yang harus dilakukan adalah: ${description}.`
+      : `The task to be performed is: ${description}.`;
+
+    const logic = lang === 'id'
+      ? `Pertimbangkan langkah-langkah logis yang diperlukan untuk menyelesaikan tugas ini dengan efektif.`
+      : `Consider the logical steps needed to effectively complete this task.`;
+
+    const example = lang === 'id'
+      ? `Sebagai contoh, hasil yang diharapkan dapat berupa teks atau konten yang jelas dan terstruktur.`
+      : `For example, the expected output might be clear and structured text or content.`;
+
+    const audience = lang === 'id'
+      ? `Audiens yang dituju hendaknya dipertimbangkan agar respons sesuai kebutuhan mereka.`
+      : `The intended audience should be considered to ensure the response meets their needs.`;
+
+    const result = lang === 'id'
+      ? `Output harus disajikan dalam format yang diinginkan pengguna, sesuai konteks dan tujuan.`
+      : `The output should be presented in the user's desired format, fitting the context and purpose.`;
+
+    return `${clarity} ${logic} ${example} ${audience} ${result}`;
+  }
+
+  const promptForm = document.getElementById('promptForm');
+  const resultSection = document.getElementById('resultSection');
+  const resultBox = document.getElementById('resultBox');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const generateBtn = document.getElementById('generateBtn');
+  const usageInfo = document.getElementById('usageInfo');
+
+  const MAX_PROMPTS_PER_DAY = 10;
+
+  // Helper function to simulate typing animation
+  async function typeText(element, text, typingSpeed = 30) {
+    element.textContent = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'typing-cursor';
+    element.appendChild(cursor);
+
+    for (let i = 0; i < text.length; i++) {
+      // Insert one character before cursor
+      cursor.insertAdjacentText('beforebegin', text.charAt(i));
+      await new Promise(resolve => setTimeout(resolve, typingSpeed));
+    }
+    // Remove cursor after typing is done
+    cursor.remove();
+  }
+
+  // Helper to get today's date string yyyy-mm-dd
+  function getTodayDateString() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Load usage data from localStorage or reset if date changed
+  function loadUsageData() {
+    const savedDate = localStorage.getItem('nb-promptDate');
+    const savedCount = parseInt(localStorage.getItem('nb-promptCount'), 10);
+    const today = getTodayDateString();
+
+    if (savedDate !== today) {
+      // New day, reset count
+      localStorage.setItem('nb-promptDate', today);
+      localStorage.setItem('nb-promptCount', '0');
+      return 0;
+    }
+    return isNaN(savedCount) ? 0 : savedCount;
+  }
+
+  // Save usage count to localStorage
+  function saveUsageCount(count) {
+    localStorage.setItem('nb-promptCount', count.toString());
+  }
+
+  // Update usage info display
+  function updateUsageDisplay(count) {
+    usageInfo.textContent = currentLanguage === 'id'
+      ? `Prompt yang digunakan: ${count} / ${MAX_PROMPTS_PER_DAY}`
+      : `Prompts used: ${count} / ${MAX_PROMPTS_PER_DAY}`;
+  }
+
+  // Initialize usage count on page load
+  let promptCount = loadUsageData();
+  updateUsageDisplay(promptCount);
+
+  promptForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const selectedPlatform = platformSelect.value;
+    const description = descriptionInput.value.trim();
+
+    if (!selectedPlatform) {
+      alert(currentLanguage === 'id' ? 'Silakan pilih platform.' : 'Please select a platform.');
+      return;
+    }
+    if (!description) {
+      alert(currentLanguage === 'id' ? 'Silakan isi deskripsi.' : 'Please enter a description.');
+      return;
+    }
+
+    // Check prompt usage limit before generating
+    if (promptCount >= MAX_PROMPTS_PER_DAY) {
+      alert(currentLanguage === 'id'
+        ? `Batas harian penggunaan prompt Anda telah tercapai (${MAX_PROMPTS_PER_DAY} prompt per hari). Silakan coba lagi besok.`
+        : `You have reached your daily prompt usage limit (${MAX_PROMPTS_PER_DAY} prompts per day). Please try again tomorrow.`);
+      return;
+    }
+
+    // Disable buttons during typing animation
+    generateBtn.disabled = true;
+    copyBtn.disabled = true;
+    clearBtn.disabled = true;
+    copyBtn.textContent = currentLanguage === 'id' ? 'Salin' : 'Copy';
+
+    // Show result section and clear old content
+    resultSection.style.display = 'block';
+    resultBox.textContent = '';
+    resultBox.focus();
+
+    const generatedPrompt = generatePrompt(selectedPlatform, description, currentLanguage);
+
+    // Typing animation simulating 'thinking'
+    await typeText(resultBox, generatedPrompt, 25);
+
+    // Update and save usage count
+    promptCount++;
+    saveUsageCount(promptCount);
+    updateUsageDisplay(promptCount);
+
+    // Re-enable buttons after animation
+    generateBtn.disabled = false;
+    copyBtn.disabled = false;
+    clearBtn.disabled = false;
+
+    // Save other state to localStorage
+    localStorage.setItem('nb-generatedPrompt', generatedPrompt);
+    localStorage.setItem('nb-description', description);
+    localStorage.setItem('nb-platform', selectedPlatform);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (resultBox.textContent) {
+      navigator.clipboard.writeText(resultBox.textContent).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = currentLanguage === 'id' ? 'Disalin' : 'Copied';
+        copyBtn.disabled = true;
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+          copyBtn.disabled = false;
+        }, 2000);
+      });
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    promptForm.reset();
+    resultBox.textContent = '';
+    resultSection.style.display = 'none';
+    platformSelect.value = '';
+    descriptionInput.value = '';
+    Object.values(platformIcons).forEach(icon => icon.style.display = 'none');
+    document.getElementById('description').focus();
+
+    // Clear saved state except usage count and date to persist usage for the day
+    localStorage.removeItem('nb-generatedPrompt');
+    localStorage.removeItem('nb-description');
+    localStorage.removeItem('nb-platform');
+  });
+
+  // Restore saved state on page load
+  window.addEventListener('load', () => {
+    // Clear saved generated prompt so it's not shown automatically on load
+    localStorage.removeItem('nb-generatedPrompt');
+
+    // Restore only inputs
+    const savedDescription = localStorage.getItem('nb-description');
+    const savedPlatform = localStorage.getItem('nb-platform');
+
+    if (savedDescription) {
+      descriptionInput.value = savedDescription;
+    }
+    if (savedPlatform) {
+      platformSelect.value = savedPlatform;
+      showPlatformIcon(savedPlatform);
+    }
+    // Hide result section initially
+    resultSection.style.display = 'none';
+  });
+
+</script>
+</body>
+</html>
+
